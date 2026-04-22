@@ -321,7 +321,10 @@ def save_file(
 
 
 def load_file(
-    filename: Union[str, os.PathLike], device: Union[str, int] = "cpu"
+    filename: Union[str, os.PathLike],
+    device: Union[str, int] = "cpu",
+    *,
+    parallel: bool = False,
 ) -> Dict[str, torch.Tensor]:
     """
     Loads a safetensors file into torch format.
@@ -332,6 +335,10 @@ def load_file(
         device (`Union[str, int]`, *optional*, defaults to `cpu`):
             The device where the tensors need to be located after load.
             available options are all regular torch device locations.
+        parallel (`bool`, *optional*, defaults to `False`):
+            Force the parallel ``preadv`` fast path on CPU. MPS always
+            uses it when available. Equivalent to setting the
+            ``SAFETENSORS_PARALLEL_CPU=1`` env var for one call.
 
     Returns:
         `Dict[str, torch.Tensor]`: dictionary that contains name as key, value as `torch.Tensor`
@@ -346,7 +353,7 @@ def load_file(
     ```
     """
     result = {}
-    with safe_open(filename, framework="pt", device=device) as f:
+    with safe_open(filename, framework="pt", device=device, parallel=parallel) as f:
         for k in f.offset_keys():
             result[k] = f.get_tensor(k)
     return result
